@@ -192,9 +192,17 @@
             ? 'Thank you. Your message has reached our careers team. Remember to email your CV to hr@orientfashions.com.'
             : 'Thank you. Your inquiry has been sent and we’ll get back to you shortly.', 'ok');
         })
-        .catch(function () {
+        .catch(function (err) {
           var to = careers ? 'hr@orientfashions.com' : 'info@orientfashions.com';
-          say('Sorry, your message couldn’t be sent just now. Please try again, or email us directly at ' + to + '.', 'error');
+          var why = (err && err.message) || '';
+          if (window.console) console.warn('Form not sent:', why);
+          if (location.protocol === 'file:') {
+            say('This form only works when the site is opened from a web address, not from a file on your computer.', 'error');
+          } else if (/activat/i.test(why)) {
+            say('This form needs a one-time activation. An activation email has been sent to ' + to + '. Once the link in it is clicked, the form will work.', 'error');
+          } else {
+            say('Sorry, your message couldn’t be sent just now. Please try again, or email us directly at ' + to + '.', 'error');
+          }
         })
         .then(function () { if (btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); } });
     });
