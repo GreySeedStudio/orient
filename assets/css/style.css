@@ -391,7 +391,11 @@ h1, h2, h3, h4, h5, .display { color: var(--ink); }
 /* ---------- Marquee ---------- */
 .marquee { overflow: hidden; border-block: 1px solid var(--line); padding-block: 1.75rem; }
 .on-dark .marquee { border-color: rgba(255,255,255,0.14); }
-.marquee__track { display: flex; align-items: center; gap: clamp(2.5rem, 6vw, 5rem); width: max-content; animation: slide 20s linear infinite; /* 3x faster than the original 60s */ }
+/* The track holds two identical halves; sliding by exactly -50% makes the loop seamless.
+   Spacing is a margin on every logo (not a flex gap) so both halves are exactly equal.
+   main.js repeats the logo set so each half is wider than the screen. */
+.marquee__track { display: flex; align-items: center; width: max-content; will-change: transform; }
+.marquee.is-ready .marquee__track { animation: slide var(--mq-dur, 20s) linear infinite; }
 /* On hover the ticker slows to half speed (40s per loop) — handled in main.js so it eases without jumping */
 @keyframes slide { to { transform: translateX(-50%); } }
 
@@ -399,13 +403,12 @@ h1, h2, h3, h4, h5, .display { color: var(--ink); }
    single ink tone so seven very different brand treatments sit together. */
 .marquee__track .logo {
   height: 40px; width: auto; flex: none;
-  opacity: 0.68; transition: opacity .35s var(--ease);
+  margin-right: clamp(2.5rem, 6vw, 5rem);
 }
-.marquee:hover .marquee__track .logo { opacity: 1; }
 @media (max-width: 700px) { .marquee__track .logo { height: 32px; } }
 @media (prefers-reduced-motion: reduce) {
   .marquee { overflow-x: auto; }
-  .marquee__track { animation: none; }
+  .marquee__track, .marquee.is-ready .marquee__track { animation: none; }
 }
 
 /* ---------- Accordion ---------- */

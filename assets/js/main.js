@@ -389,13 +389,48 @@
     else { var pr = hv.play(); if (pr && pr.catch) pr.catch(function () {}); }
   }
 
-  /* ---- Brand ticker: slow to half speed on hover instead of pausing ---- */
-  var mq = document.querySelector('.marquee');
+  /* ---- Brand ticker: seamless loop, 20s per logo set, half speed on hover ---- */
+  var mq = document.querySelector('[data-marquee]');
   var mqTrack = mq && mq.querySelector('.marquee__track');
-  if (mq && mqTrack && mqTrack.getAnimations) {
+  if (mq && mqTrack) {
+    var SET_SECONDS = 20;
+    var original = Array.prototype.slice.call(mqTrack.children);
+    var build = function () {
+      mq.classList.remove('is-ready');
+      while (mqTrack.children.length > original.length) mqTrack.removeChild(mqTrack.lastChild);
+      var setW = mqTrack.scrollWidth;
+      if (!setW) return;
+      /* repeat the set until one half is at least as wide as the screen */
+      var copies = Math.max(1, Math.ceil(mq.clientWidth / setW));
+      var addSet = function (hidden) {
+        original.forEach(function (el) {
+          var c = el.cloneNode(true);
+          if (hidden) { c.setAttribute('alt', ''); c.setAttribute('aria-hidden', 'true'); }
+          mqTrack.appendChild(c);
+        });
+      };
+      for (var i = 1; i < copies; i++) addSet(true);   /* first half */
+      for (var j = 0; j < copies; j++) addSet(true);   /* second half, identical */
+      mq.style.setProperty('--mq-dur', (SET_SECONDS * copies) + 's');
+      void mqTrack.offsetWidth;
+      mq.classList.add('is-ready');
+    };
+    var ready = function () {
+      var imgs = original.filter(function (el) { return el.tagName === 'IMG' && !el.complete; });
+      if (!imgs.length) { build(); return; }
+      var left = imgs.length;
+      imgs.forEach(function (im) {
+        var done = function () { if (--left === 0) build(); };
+        im.addEventListener('load', done, { once: true });
+        im.addEventListener('error', done, { once: true });
+      });
+    };
+    ready();
+    var rT; window.addEventListener('resize', function () { clearTimeout(rT); rT = setTimeout(build, 200); });
+
     var ease = null;
     var setRate = function (target) {
-      var anim = mqTrack.getAnimations()[0];
+      var anim = mqTrack.getAnimations ? mqTrack.getAnimations()[0] : null;
       if (!anim) return;
       if (ease) cancelAnimationFrame(ease);
       var from = anim.playbackRate, start = performance.now(), dur = 400;
