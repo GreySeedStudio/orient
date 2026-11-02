@@ -393,7 +393,7 @@ h1, h2, h3, h4, h5, .display { color: var(--ink); }
 /* ---------- Marquee ---------- */
 .marquee { overflow: hidden; border-block: 1px solid var(--line); padding-block: 1.75rem; }
 .on-dark .marquee { border-color: rgba(255,255,255,0.14); }
-.marquee__track { display: flex; align-items: center; gap: clamp(2.5rem, 6vw, 5rem); width: max-content; animation: slide 60s linear infinite; }
+.marquee__track { display: flex; align-items: center; gap: clamp(2.5rem, 6vw, 5rem); width: max-content; animation: slide 40s linear infinite; /* 1.5x faster than the original 60s */ }
 .marquee:hover .marquee__track { animation-play-state: paused; }
 @keyframes slide { to { transform: translateX(-50%); } }
 
@@ -731,3 +731,10 @@ body.ph-off .ph-toggle__dot { background: var(--muted); }
 .members__list dt, .whatwhere__list dt { font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); padding-top: 0.15rem; }
 .members__list dd, .whatwhere__list dd { margin: 0; color: var(--ink); }
 @media (max-width: 560px) { .members__list > div, .whatwhere__list > div { grid-template-columns: 1fr; gap: 0.25rem; } }
+/* Facility cards: area and headcount */
+.fac__facts { display: flex; flex-wrap: wrap; gap: 0.35rem 1.25rem; margin-top: 1rem; padding-top: 0.9rem; border-top: 1px solid var(--line); font-family: var(--mono); font-size: var(--fs-xs); color: var(--ink); }
+.fac__total { margin-top: 1.5rem; font-size: var(--fs-sm); color: var(--muted); }
+/* Keep the area/headcount line on the same baseline across a row */
+.card:has(.fac__facts) { display: flex; flex-direction: column; }
+.card:has(.fac__facts) .card__b { margin-bottom: 1rem; }
+.card .fac__facts { margin-top: auto; }

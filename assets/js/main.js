@@ -92,7 +92,7 @@
      FormSubmit sends, so the address isn't visible in the page source. */
   var FORM_ROUTES = {
     general: { endpoint: 'https://formsubmit.co/ajax/info@orientfashions.com', cc: 'aarshiasethi@orientfashions.com' },
-    careers: { endpoint: 'https://formsubmit.co/ajax/career@orientfashions.com', cc: '' }
+    careers: { endpoint: 'https://formsubmit.co/ajax/hr@orientfashions.com', cc: '' }
   };
 
   var form = document.querySelector('[data-form]');
@@ -189,11 +189,11 @@
           if (!res.ok || String(res.j.success) === 'false') throw new Error(res.j.message || 'Send failed');
           form.reset(); syncType();
           say(careers
-            ? 'Thank you. Your message has reached our careers team. Remember to email your CV to career@orientfashions.com.'
+            ? 'Thank you. Your message has reached our careers team. Remember to email your CV to hr@orientfashions.com.'
             : 'Thank you. Your inquiry has been sent and we’ll get back to you shortly.', 'ok');
         })
         .catch(function () {
-          var to = careers ? 'career@orientfashions.com' : 'info@orientfashions.com';
+          var to = careers ? 'hr@orientfashions.com' : 'info@orientfashions.com';
           say('Sorry, your message couldn’t be sent just now. Please try again, or email us directly at ' + to + '.', 'error');
         })
         .then(function () { if (btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); } });
