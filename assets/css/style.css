@@ -298,9 +298,7 @@ h1, h2, h3, h4, h5, .display { color: var(--ink); }
   position: absolute; inset: 0; z-index: 1;
   width: 100%; height: 100%; object-fit: cover;
 }
-/* Video off → the still underneath shows through unchanged */
-@media (max-width: 700px) { .hero__video { display: none; } }
-@media (prefers-reduced-motion: reduce) { .hero__video { display: none; } }
+.hero__media { background: #1b1d18; } /* shown for the moment before the video's first frame */
 .hero__media::after { content: ""; position: absolute; inset: 0; z-index: 2; background: linear-gradient(180deg, rgba(14,16,12,0.55) 0%, rgba(14,16,12,0.25) 40%, rgba(14,16,12,0.88) 100%); }
 .hero__in { position: relative; z-index: 2; width: 100%; }
 .hero .display, .hero .lead, .hero .eyebrow { color: var(--on-dark); }
@@ -393,8 +391,8 @@ h1, h2, h3, h4, h5, .display { color: var(--ink); }
 /* ---------- Marquee ---------- */
 .marquee { overflow: hidden; border-block: 1px solid var(--line); padding-block: 1.75rem; }
 .on-dark .marquee { border-color: rgba(255,255,255,0.14); }
-.marquee__track { display: flex; align-items: center; gap: clamp(2.5rem, 6vw, 5rem); width: max-content; animation: slide 40s linear infinite; /* 1.5x faster than the original 60s */ }
-.marquee:hover .marquee__track { animation-play-state: paused; }
+.marquee__track { display: flex; align-items: center; gap: clamp(2.5rem, 6vw, 5rem); width: max-content; animation: slide 20s linear infinite; /* 3x faster than the original 60s */ }
+/* On hover the ticker slows to half speed (40s per loop) — handled in main.js so it eases without jumping */
 @keyframes slide { to { transform: translateX(-50%); } }
 
 /* Client logos: all supplied at a uniform 40px ink height, recoloured to a
@@ -738,3 +736,39 @@ body.ph-off .ph-toggle__dot { background: var(--muted); }
 .card:has(.fac__facts) { display: flex; flex-direction: column; }
 .card:has(.fac__facts) .card__b { margin-bottom: 1rem; }
 .card .fac__facts { margin-top: auto; }
+
+/* ---------- Capabilities: Categories / Scale cards share row heights, so the dividers line up ---------- */
+.card-pair > .card { display: grid; grid-row: span 3; grid-template-rows: subgrid; row-gap: 0; align-content: start; }
+.card-pair > .card > .cert__meta { align-self: start; }
+
+/* ---------- Client appreciation cards: author pinned to the bottom ---------- */
+.qgrid { align-items: stretch; }
+.qgrid > .card { display: flex; flex-direction: column; }
+.qgrid .quote__by { margin-top: auto; padding-top: 1.75rem; }
+
+/* ---------- Mobile menu: full-height panel with a CTA at the bottom ---------- */
+.nav__cta { display: none; }
+@media (max-width: 860px) {
+  .hdr.is-open .nav {
+    height: calc(100dvh - var(--hdr-h, 72px));
+    overflow-y: auto;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+    border-bottom: 0;
+  }
+  .hdr.is-open .nav a.nav__cta {
+    display: flex; justify-content: center; align-self: stretch;
+    margin-top: auto; padding: 1em 1.5em;
+    font-family: var(--sans); font-size: var(--fs-sm);
+    background: var(--ink); color: var(--paper) !important; border-color: var(--ink);
+  }
+  .hdr.is-open .nav a.nav__cta::after { display: none; }
+  body.menu-open { overflow: hidden; }
+}
+
+/* ---------- Mobile: call-to-action buttons span the container ---------- */
+@media (max-width: 640px) {
+  main .btn { width: 100%; justify-content: center; }
+}
+@media (max-width: 640px) {
+  .hero__foot > div { width: 100%; }
+}

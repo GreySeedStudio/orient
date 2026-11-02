@@ -15,12 +15,19 @@
   /* ---- Mobile nav ---- */
   var burger = document.querySelector('.burger');
   if (burger && hdr) {
-    burger.addEventListener('click', function () {
-      var open = hdr.classList.toggle('is-open');
+    var setMenu = function (open) {
+      hdr.classList.toggle('is-open', open);
       burger.setAttribute('aria-expanded', String(open));
-    });
+      document.body.classList.toggle('menu-open', open);
+      /* the panel fills the screen below the header */
+      document.documentElement.style.setProperty('--hdr-h', hdr.offsetHeight + 'px');
+    };
+    burger.addEventListener('click', function () { setMenu(!hdr.classList.contains('is-open')); });
     document.querySelectorAll('.nav a').forEach(function (a) {
-      a.addEventListener('click', function () { hdr.classList.remove('is-open'); });
+      a.addEventListener('click', function () { setMenu(false); });
+    });
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 860 && hdr.classList.contains('is-open')) setMenu(false);
     });
   }
 
@@ -372,5 +379,34 @@
       if (note) note.hidden = true;
     });
     try { if (localStorage.getItem(MAP_KEY) === 'yes') loadMap(false); } catch (e) {}
+  }
+
+  /* ---- Hero video: make sure it plays on phones too; respect reduced-motion by pausing ---- */
+  var hv = document.querySelector('.hero__video');
+  if (hv) {
+    hv.muted = true;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { hv.pause(); hv.removeAttribute('autoplay'); }
+    else { var pr = hv.play(); if (pr && pr.catch) pr.catch(function () {}); }
+  }
+
+  /* ---- Brand ticker: slow to half speed on hover instead of pausing ---- */
+  var mq = document.querySelector('.marquee');
+  var mqTrack = mq && mq.querySelector('.marquee__track');
+  if (mq && mqTrack && mqTrack.getAnimations) {
+    var ease = null;
+    var setRate = function (target) {
+      var anim = mqTrack.getAnimations()[0];
+      if (!anim) return;
+      if (ease) cancelAnimationFrame(ease);
+      var from = anim.playbackRate, start = performance.now(), dur = 400;
+      var step = function (now) {
+        var t = Math.min(1, (now - start) / dur);
+        anim.playbackRate = from + (target - from) * (1 - Math.pow(1 - t, 3));
+        if (t < 1) ease = requestAnimationFrame(step);
+      };
+      ease = requestAnimationFrame(step);
+    };
+    mq.addEventListener('mouseenter', function () { setRate(0.5); });
+    mq.addEventListener('mouseleave', function () { setRate(1); });
   }
 })();
