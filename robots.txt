@@ -3,7 +3,6 @@
 
 User-agent: *
 Allow: /
-Disallow: /carousel-test.html
 
 # AI search and answer engines (these decide whether we can be cited in AI answers)
 User-agent: OAI-SearchBot
