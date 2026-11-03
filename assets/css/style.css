@@ -396,14 +396,17 @@ h1, h2, h3, h4, h5, .display { color: var(--ink); }
    Spacing is a margin on every logo (not a flex gap) so both halves are exactly equal.
    main.js repeats the logo set so each half is wider than the screen. */
 .marquee__track { display: flex; align-items: center; width: max-content; will-change: transform;
-  animation: slide var(--mq-dur, 20s) linear infinite; }
+  animation: slide var(--mq-dur, 20s) linear infinite;   /* fallback if JS doesn't run */
+  opacity: 0.6; transition: opacity .4s ease; }
+.marquee.is-js .marquee__track { animation: none; }       /* JS drives the movement */
+@media (hover: hover) { .marquee:hover .marquee__track { opacity: 1; } }
 /* On hover the ticker slows to half speed (40s per loop) — handled in main.js so it eases without jumping */
 @keyframes slide { to { transform: translateX(-50%); } }
 
 /* Client logos: all supplied at a uniform 40px ink height, recoloured to a
    single ink tone so seven very different brand treatments sit together. */
 .marquee__track .logo {
-  height: 40px; width: auto; flex: none; opacity: 0.8;
+  height: 40px; width: auto; flex: none;
   margin-right: clamp(2.5rem, 6vw, 5rem);
 }
 @media (max-width: 700px) { .marquee__track .logo { height: 32px; } }

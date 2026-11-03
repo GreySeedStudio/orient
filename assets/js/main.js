@@ -389,28 +389,32 @@
     else { var pr = hv.play(); if (pr && pr.catch) pr.catch(function () {}); }
   }
 
-  /* ---- Brand ticker: seamless loop, 20s per logo set, half speed on hover ----
-     The CSS animation runs from the start, so the ticker always moves even if this
-     script is slow. The logos carry width/height, so their sizes are known before the
-     files load; here we only add repeats so each half of the track covers the screen. */
+  /* ---- Brand ticker ----
+     Speed: one logo set every 20s; half speed (40s) while hovered.
+     JS moves the track itself (one transform per frame, GPU-composited), so the speed
+     change eases smoothly and never restarts. If this script fails, the CSS animation
+     in style.css keeps the ticker moving at full speed. */
   var mq = document.querySelector('[data-marquee]');
   var mqTrack = mq && mq.querySelector('.marquee__track');
-  if (mq && mqTrack) {
-    var SET_SECONDS = 20;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (mq && mqTrack && !reduce) {
+    var SET_SECONDS = 20, HOVER_RATE = 0.5, EASE_S = 0.35;
     var original = Array.prototype.slice.call(mqTrack.children);
-    var lastW = 0;
-    var build = function () {
-      var vw = mq.clientWidth;                 /* read layout first ... */
-      var setW = 0;
+    var setW = 0, halfW = 0, x = 0, rate = 1, target = 1, last = 0, raf = 0, visible = true, lastVW = 0;
+
+    var measure = function () {
+      var w = 0;
       original.forEach(function (el) {
-        var cs = getComputedStyle(el);
-        setW += el.getBoundingClientRect().width + parseFloat(cs.marginRight || 0);
+        w += el.getBoundingClientRect().width + (parseFloat(getComputedStyle(el).marginRight) || 0);
       });
-      if (!vw || !setW) return;
-      if (vw === lastW && mqTrack.children.length > original.length) return;
-      lastW = vw;
-      var copies = Math.max(1, Math.ceil(vw / setW));
-      var frag = document.createDocumentFragment();  /* ... then write once */
+      return w;
+    };
+    var build = function () {
+      var vw = mq.clientWidth, w = measure();
+      if (!vw || !w) return false;
+      if (vw === lastVW && w === setW && halfW) return true;
+      var copies = Math.max(1, Math.ceil(vw / w));
+      var frag = document.createDocumentFragment();
       for (var i = 0; i < copies * 2 - 1; i++) {
         original.forEach(function (el) {
           var c = el.cloneNode(true);
@@ -420,27 +424,40 @@
       }
       while (mqTrack.children.length > original.length) mqTrack.removeChild(mqTrack.lastChild);
       mqTrack.appendChild(frag);
-      mq.style.setProperty('--mq-dur', (SET_SECONDS * copies) + 's');
+      setW = w; halfW = w * copies; lastVW = vw;
+      x = halfW ? x % halfW : 0;
+      return true;
     };
-    requestAnimationFrame(build);
-    window.addEventListener('load', function () { lastW = 0; requestAnimationFrame(build); });
+    var frame = function (now) {
+      raf = 0;
+      var dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
+      last = now;
+      rate += (target - rate) * (1 - Math.exp(-dt / EASE_S));   /* smooth ease between speeds */
+      x += (setW / SET_SECONDS) * rate * dt;
+      if (x >= halfW) x -= halfW;
+      mqTrack.style.transform = 'translate3d(' + (-x).toFixed(2) + 'px,0,0)';
+      if (visible) raf = requestAnimationFrame(frame);
+    };
+    var start = function () { if (!raf && visible && halfW) { last = 0; raf = requestAnimationFrame(frame); } };
+
+    requestAnimationFrame(function () {
+      if (!build()) return;            /* leave the CSS fallback running */
+      mq.classList.add('is-js');       /* hand over from the CSS animation */
+      start();
+    });
+    window.addEventListener('load', function () { requestAnimationFrame(function () { setW = 0; build(); }); });
     var rT; window.addEventListener('resize', function () {
       clearTimeout(rT); rT = setTimeout(function () { requestAnimationFrame(build); }, 200);
     });
-    var ease = null;
-    var setRate = function (target) {
-      var anim = mqTrack.getAnimations ? mqTrack.getAnimations()[0] : null;
-      if (!anim) return;
-      if (ease) cancelAnimationFrame(ease);
-      var from = anim.playbackRate, start = performance.now(), dur = 400;
-      var step = function (now) {
-        var t = Math.min(1, (now - start) / dur);
-        anim.playbackRate = from + (target - from) * (1 - Math.pow(1 - t, 3));
-        if (t < 1) ease = requestAnimationFrame(step);
-      };
-      ease = requestAnimationFrame(step);
-    };
-    mq.addEventListener('mouseenter', function () { setRate(0.5); });
-    mq.addEventListener('mouseleave', function () { setRate(1); });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) {
+        visible = es[0].isIntersecting;
+        if (visible) start();
+      }).observe(mq);
+    }
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) start(); });
+    mq.addEventListener('mouseenter', function () { target = HOVER_RATE; });
+    mq.addEventListener('mouseleave', function () { target = 1; });
   }
+
 })();
