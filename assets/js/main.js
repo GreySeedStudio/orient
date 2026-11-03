@@ -313,7 +313,7 @@
     }, { passive: true });
 
     buildClones();
-    measure();
+    requestAnimationFrame(measure);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
     window.addEventListener('load', measure);
     var rt;
@@ -389,45 +389,44 @@
     else { var pr = hv.play(); if (pr && pr.catch) pr.catch(function () {}); }
   }
 
-  /* ---- Brand ticker: seamless loop, 20s per logo set, half speed on hover ---- */
+  /* ---- Brand ticker: seamless loop, 20s per logo set, half speed on hover ----
+     The CSS animation runs from the start, so the ticker always moves even if this
+     script is slow. The logos carry width/height, so their sizes are known before the
+     files load; here we only add repeats so each half of the track covers the screen. */
   var mq = document.querySelector('[data-marquee]');
   var mqTrack = mq && mq.querySelector('.marquee__track');
   if (mq && mqTrack) {
     var SET_SECONDS = 20;
     var original = Array.prototype.slice.call(mqTrack.children);
+    var lastW = 0;
     var build = function () {
-      mq.classList.remove('is-ready');
-      while (mqTrack.children.length > original.length) mqTrack.removeChild(mqTrack.lastChild);
-      var setW = mqTrack.scrollWidth;
-      if (!setW) return;
-      /* repeat the set until one half is at least as wide as the screen */
-      var copies = Math.max(1, Math.ceil(mq.clientWidth / setW));
-      var addSet = function (hidden) {
+      var vw = mq.clientWidth;                 /* read layout first ... */
+      var setW = 0;
+      original.forEach(function (el) {
+        var cs = getComputedStyle(el);
+        setW += el.getBoundingClientRect().width + parseFloat(cs.marginRight || 0);
+      });
+      if (!vw || !setW) return;
+      if (vw === lastW && mqTrack.children.length > original.length) return;
+      lastW = vw;
+      var copies = Math.max(1, Math.ceil(vw / setW));
+      var frag = document.createDocumentFragment();  /* ... then write once */
+      for (var i = 0; i < copies * 2 - 1; i++) {
         original.forEach(function (el) {
           var c = el.cloneNode(true);
-          if (hidden) { c.setAttribute('alt', ''); c.setAttribute('aria-hidden', 'true'); }
-          mqTrack.appendChild(c);
+          c.setAttribute('alt', ''); c.setAttribute('aria-hidden', 'true');
+          frag.appendChild(c);
         });
-      };
-      for (var i = 1; i < copies; i++) addSet(true);   /* first half */
-      for (var j = 0; j < copies; j++) addSet(true);   /* second half, identical */
+      }
+      while (mqTrack.children.length > original.length) mqTrack.removeChild(mqTrack.lastChild);
+      mqTrack.appendChild(frag);
       mq.style.setProperty('--mq-dur', (SET_SECONDS * copies) + 's');
-      void mqTrack.offsetWidth;
-      mq.classList.add('is-ready');
     };
-    var ready = function () {
-      var imgs = original.filter(function (el) { return el.tagName === 'IMG' && !el.complete; });
-      if (!imgs.length) { build(); return; }
-      var left = imgs.length;
-      imgs.forEach(function (im) {
-        var done = function () { if (--left === 0) build(); };
-        im.addEventListener('load', done, { once: true });
-        im.addEventListener('error', done, { once: true });
-      });
-    };
-    ready();
-    var rT; window.addEventListener('resize', function () { clearTimeout(rT); rT = setTimeout(build, 200); });
-
+    requestAnimationFrame(build);
+    window.addEventListener('load', function () { lastW = 0; requestAnimationFrame(build); });
+    var rT; window.addEventListener('resize', function () {
+      clearTimeout(rT); rT = setTimeout(function () { requestAnimationFrame(build); }, 200);
+    });
     var ease = null;
     var setRate = function (target) {
       var anim = mqTrack.getAnimations ? mqTrack.getAnimations()[0] : null;

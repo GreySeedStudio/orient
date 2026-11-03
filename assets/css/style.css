@@ -86,6 +86,7 @@ body {
   overflow-x: hidden;
 }
 img, video, svg { max-width: 100%; display: block; }
+img { height: auto; }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; cursor: pointer; }
 h1, h2, h3, h4, h5 { margin: 0; font-weight: 500; }
@@ -394,21 +395,21 @@ h1, h2, h3, h4, h5, .display { color: var(--ink); }
 /* The track holds two identical halves; sliding by exactly -50% makes the loop seamless.
    Spacing is a margin on every logo (not a flex gap) so both halves are exactly equal.
    main.js repeats the logo set so each half is wider than the screen. */
-.marquee__track { display: flex; align-items: center; width: max-content; will-change: transform; }
-.marquee.is-ready .marquee__track { animation: slide var(--mq-dur, 20s) linear infinite; }
+.marquee__track { display: flex; align-items: center; width: max-content; will-change: transform;
+  animation: slide var(--mq-dur, 20s) linear infinite; }
 /* On hover the ticker slows to half speed (40s per loop) — handled in main.js so it eases without jumping */
 @keyframes slide { to { transform: translateX(-50%); } }
 
 /* Client logos: all supplied at a uniform 40px ink height, recoloured to a
    single ink tone so seven very different brand treatments sit together. */
 .marquee__track .logo {
-  height: 40px; width: auto; flex: none;
+  height: 40px; width: auto; flex: none; opacity: 0.8;
   margin-right: clamp(2.5rem, 6vw, 5rem);
 }
 @media (max-width: 700px) { .marquee__track .logo { height: 32px; } }
 @media (prefers-reduced-motion: reduce) {
   .marquee { overflow-x: auto; }
-  .marquee__track, .marquee.is-ready .marquee__track { animation: none; }
+  .marquee__track { animation: none; }
 }
 
 /* ---------- Accordion ---------- */
