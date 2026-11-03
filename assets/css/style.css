@@ -779,3 +779,6 @@ body.ph-off .ph-toggle__dot { background: var(--muted); }
 @media (max-width: 640px) {
   .hero__foot > div { width: 100%; }
 }
+
+/* In-page anchors land below the sticky header */
+#certifications { scroll-margin-top: 5.5rem; }
