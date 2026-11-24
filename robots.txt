@@ -1,4 +1,4 @@
-# Orient Fashions — https://orientfashions.com
+# Orient Fashions: https://orientfashions.com
 # Everyone is welcome to crawl the site, including search engines and AI assistants.
 
 User-agent: *
